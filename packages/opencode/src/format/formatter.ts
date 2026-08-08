@@ -337,6 +337,16 @@ export const shfmt: Info = {
   },
 }
 
+export const stylua: Info = {
+  name: "stylua",
+  extensions: [".lua", ".luau"],
+  async enabled() {
+    const match = which("stylua")
+    if (!match) return false
+    return [match, "$FILE"]
+  },
+}
+
 export const nixfmt: Info = {
   name: "nixfmt",
   extensions: [".nix"],

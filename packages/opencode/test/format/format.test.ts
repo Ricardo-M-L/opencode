@@ -232,4 +232,41 @@ describe("Format", () => {
       },
     },
   )
+
+  it.instance(
+    "formats Lua and Luau files with the built-in StyLua extensions",
+    () =>
+      Effect.gen(function* () {
+        const test = yield* TestInstance
+        const lua = `${test.directory}/main.lua`
+        const luau = `${test.directory}/main.luau`
+        yield* Effect.promise(() =>
+          Promise.all([Bun.write(lua, "local lua = true\n"), Bun.write(luau, "local luau = true\n")]),
+        )
+
+        yield* Format.Service.use((fmt) =>
+          Effect.gen(function* () {
+            expect(yield* fmt.file(lua)).toBe(true)
+            expect(yield* fmt.file(luau)).toBe(true)
+          }),
+        )
+
+        expect(yield* Effect.promise(() => Bun.file(lua).text())).toBe("local lua = true\n-- formatted\n")
+        expect(yield* Effect.promise(() => Bun.file(luau).text())).toBe("local luau = true\n-- formatted\n")
+      }),
+    {
+      config: {
+        formatter: {
+          stylua: {
+            command: [
+              "node",
+              "-e",
+              "const fs = require('fs'); const file = process.argv[1]; fs.appendFileSync(file, '-- formatted\\n')",
+              "$FILE",
+            ],
+          },
+        },
+      },
+    },
+  )
 })
